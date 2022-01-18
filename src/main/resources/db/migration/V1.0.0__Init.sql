@@ -274,7 +274,6 @@ INSERT INTO crm.application_status VALUES (2, 'Decision made');
 CREATE TABLE IF NOT EXISTS crm.application_status_change (
     id IDENTITY NOT NULL,
     date_changed TIMESTAMP NOT NULL,
-    stat VARCHAR(200) NOT NULL,
     application_status_id BIGINT NOT NULL,
     application_id BIGINT NOT NULL,
     FOREIGN KEY (application_status_id) REFERENCES crm.application_status(id),
