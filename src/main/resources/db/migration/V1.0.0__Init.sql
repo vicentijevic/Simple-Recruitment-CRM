@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS crm.process (
 	id IDENTITY NOT NULL,
 	code VARCHAR(10) NOT NULL,
 	description VARCHAR(100) NOT NULL,
-	recruiter_id BIGINT,
+	recruiter_id BIGINT NOT NULL NOT NULL,
 	FOREIGN KEY (recruiter_id) REFERENCES crm.recruiter(id),
 	PRIMARY KEY(id)
 );
@@ -97,11 +97,11 @@ CREATE TABLE IF NOT EXISTS crm.job (
 	date_published DATE NOT NULL,
 	job_start_date DATE,
 	no_of_vacancies INT,
-	job_category_id BIGINT,
-	job_position_id BIGINT,
-	job_platform_id BIGINT,
-	organization_id BIGINT,
-	process_id BIGINT,
+	job_category_id BIGINT NOT NULL,
+	job_position_id BIGINT NOT NULL,
+	job_platform_id BIGINT NOT NULL,
+	organization_id BIGINT NOT NULL,
+	process_id BIGINT NOT NULL,
 	FOREIGN KEY (job_category_id) REFERENCES crm.job_category(id),
 	FOREIGN KEY (job_position_id) REFERENCES crm.job_position(id),
 	FOREIGN KEY (job_platform_id) REFERENCES crm.job_platform(id),
@@ -133,6 +133,155 @@ INSERT INTO crm.applicant VALUES (3, 'Judith', 'Harper-Melnick', 'judithmelnick@
 INSERT INTO crm.applicant VALUES (4, 'Jake', 'Harper', 'jakeharper@email.com', '+13101237438');
 INSERT INTO crm.applicant VALUES (5, 'Herbert', 'Melnick', 'herbertmelnick@email.com', '+13109520856');
 
+CREATE TABLE IF NOT EXISTS crm.document (
+    id IDENTITY NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    document BINARY(500000),
+    url VARCHAR(200),
+    last_update TIMESTAMP NOT NULL,
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.document (id, name, document, last_update) VALUES (1, 'Charlie Harper CV', FILE_READ('classpath:db/documents/Charlie_Harper_CV.pdf'), CURRENT_TIMESTAMP());
+INSERT INTO crm.document (id, name, url, last_update) VALUES (2, 'Alan Harper CV', 'https://v1.overleaf.com/latex/templates/receive/dbzynfgjmxqy.pdf', CURRENT_TIMESTAMP());
+
+CREATE TABLE IF NOT EXISTS crm.application (
+    id IDENTITY NOT NULL,
+    date_of_application DATE NOT NULL,
+    education CHARACTER LARGE OBJECT,
+    experience CHARACTER LARGE OBJECT,
+    other_info CHARACTER LARGE OBJECT,
+    job_id BIGINT NOT NULL,
+    applicant_id BIGINT NOT NULL,
+    FOREIGN KEY (job_id) REFERENCES crm.job(id),
+    FOREIGN KEY (applicant_id) REFERENCES crm.applicant(id),
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.application VALUES (1, CURRENT_DATE(),
+                                 'DIGITAL MARKETING BACHELOR, 2015 - 2017, Learn how to make sales thatcapture the attention of your targetaudience visually.',
+                                 'GINYARD INTERNATIONAL CO, 2020 - 2021, Schedule posts to social media.,Write concepts and ideas that will beuploaded to social media.',
+                                 'I am a copywriter, I am incharge of creating and writingdigital marketing creativecontent, which can inform theaudience.',
+                                 4, 1);
+INSERT INTO crm.application VALUES (2, CURRENT_DATE(),
+                                 'School of Engineering, BSC IN MECHANICAL ENGINEERING',
+                                 'Technology Company AG, SYSTEMS ENGINEER, Technology Company AG, INTERNSHIP AS TEST ENGINEER ',
+                                 'HOBBIES Lorem ipsum dolor sit amet, consectetur adipiscing elit',
+                                 3, 2);
+
+CREATE TABLE IF NOT EXISTS crm.application_document (
+    id IDENTITY NOT NULL,
+    document_id BIGINT NOT NULL,
+    application_id BIGINT NOT NULL,
+    FOREIGN KEY (document_id) REFERENCES crm.document(id),
+    FOREIGN KEY (application_id) REFERENCES crm.application(id),
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.application_document VALUES (1, 1, 1);
+INSERT INTO crm.application_document VALUES (2, 2, 2);
+
+CREATE TABLE IF NOT EXISTS crm.test (
+    id IDENTITY NOT NULL,
+    code VARCHAR(10) NOT NULL,
+    duration INT,
+    max_score INT NOT NULL,
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.test VALUES (1, 'TST1', 90, 100);
+INSERT INTO crm.test VALUES (2, 'TST2', 60, 10);
+
+CREATE TABLE IF NOT EXISTS crm.application_test (
+    id IDENTITY NOT NULL,
+    test_id BIGINT NOT NULL,
+    application_id BIGINT NOT NULL,
+    start_time TIMESTAMP,
+    end_time TIMESTAMP,
+    FOREIGN KEY (test_id) REFERENCES crm.test(id),
+    FOREIGN KEY (application_id) REFERENCES crm.application(id),
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.application_test VALUES (1, 1, 1, '2021-10-12 09:00:00', '2021-10-12 10:00:00');
+INSERT INTO crm.application_test VALUES (2, 2, 2, '2022-01-22 09:00:00', '2022-01-22 10:00:00');
+
+CREATE TABLE IF NOT EXISTS crm.answers (
+    id IDENTITY NOT NULL,
+    application_id BIGINT NOT NULL,
+    recruiter_id BIGINT NOT NULL,
+    total_grades VARCHAR(10),
+    pass BOOLEAN,
+    answer_details BIGINT,
+    FOREIGN KEY (application_id) REFERENCES crm.application(id),
+    FOREIGN KEY (recruiter_id) REFERENCES crm.recruiter(id),
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.answers (id, application_id, recruiter_id, total_grades, pass) VALUES (1, 1, 1, 'AVG', TRUE);
+INSERT INTO crm.answers (id, application_id, recruiter_id, total_grades, pass) VALUES (2, 2, 1, 'EXC', TRUE);
 
 
+CREATE TABLE IF NOT EXISTS crm.interview (
+    id IDENTITY NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    application_id BIGINT NOT NULL,
+    FOREIGN KEY (application_id) REFERENCES crm.application(id),
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.interview VALUES (1, '2021-10-21 09:00:00', '2021-10-21 10:30:00', 1);
+INSERT INTO crm.interview VALUES (2, '2022-02-13 09:00:00', '2022-02-13 10:30:00', 2);
+
+CREATE TABLE IF NOT EXISTS crm.interview_note (
+    id IDENTITY NOT NULL,
+    notes CHARACTER LARGE OBJECT,
+    interview_id BIGINT NOT NULL,
+    recruiter_id BIGINT NOT NULL,
+    pass BOOLEAN,
+    FOREIGN KEY (interview_id) REFERENCES crm.interview(id),
+    FOREIGN KEY (recruiter_id) REFERENCES crm.recruiter(id),
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.interview_note (id, interview_id, recruiter_id, pass) VALUES (1, 1, 1, TRUE);
+INSERT INTO crm.interview_note (id, interview_id, recruiter_id, pass) VALUES (2, 2, 1, FALSE);
+
+CREATE TABLE IF NOT EXISTS crm.applicant_evaluation (
+    id IDENTITY NOT NULL,
+    notes CHARACTER LARGE OBJECT,
+    recruiter_id BIGINT NOT NULL,
+    application_id BIGINT NOT NULL,
+    hired BOOLEAN,
+    FOREIGN KEY (recruiter_id) REFERENCES crm.recruiter(id),
+    FOREIGN KEY (application_id) REFERENCES crm.application(id),
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.applicant_evaluation (id, recruiter_id, application_id, hired) VALUES (1, 1, 1, TRUE);
+INSERT INTO crm.applicant_evaluation (id, recruiter_id, application_id, hired) VALUES (2, 1, 2, FALSE);
+
+CREATE TABLE IF NOT EXISTS crm.application_status (
+    id IDENTITY NOT NULL,
+    stat VARCHAR(200) NOT NULL,
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.application_status VALUES (1, 'Waiting for decision');
+INSERT INTO crm.application_status VALUES (2, 'Decision made');
+
+CREATE TABLE IF NOT EXISTS crm.application_status_change (
+    id IDENTITY NOT NULL,
+    date_changed TIMESTAMP NOT NULL,
+    stat VARCHAR(200) NOT NULL,
+    application_status_id BIGINT NOT NULL,
+    application_id BIGINT NOT NULL,
+    FOREIGN KEY (application_status_id) REFERENCES crm.application_status(id),
+    FOREIGN KEY (application_id) REFERENCES crm.application(id),
+    PRIMARY KEY(id)
+);
+
+INSERT INTO crm.application_status_change VALUES (1, '2021-10-21 10:30:00', 1, 1);
+INSERT INTO crm.application_status_change VALUES (2, '2022-02-13 10:30:00', 2, 2);
 
