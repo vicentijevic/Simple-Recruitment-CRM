@@ -1,10 +1,17 @@
 package com.example.SimpleRecruitmentCRM.model;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 import java.io.Serializable;
 
+@MappedSuperclass
 public class BaseEntity implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
-    private Integer version;
 
     public Long getId() {
         return id;
@@ -14,11 +21,4 @@ public class BaseEntity implements Serializable {
         this.id = id;
     }
 
-    public Integer getVersion() {
-        return version;
-    }
-
-    public void setVersion(Integer version) {
-        this.version = version;
-    }
 }
